@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterator
 
 import httpx
 
@@ -6,9 +7,6 @@ from app.core import ollama
 from app.core.exceptions import NarratorUnavailableError
 from app.models import Game
 from app.services.dice import Outcome
-
-# Quantos turnos anteriores a IA vê. Pouco contexto = resposta mais rápida em CPU.
-HISTORY_TURNS = 3
 
 # O system prompt fica idêntico durante a partida inteira: assim o Ollama
 # reaproveita o processamento dele de um turno pro outro.
@@ -38,10 +36,19 @@ def _system_message(game: Game) -> dict:
     return {"role": "system", "content": SYSTEM_PROMPT.format(name=game.user.username)}
 
 def _history(game: Game) -> list[dict]:
+    """Recria cada pedido exatamente como foi enviado.
+
+    Se o começo do prompt for idêntico ao do turno anterior, o Ollama reaproveita o que
+    já processou e só lê a parte nova. Por isso o histórico vai inteiro, sem cortes:
+    cortar turnos antigos mudaria o começo e jogaria esse cache fora.
+    """
     messages = []
-    for turn in game.turns[-HISTORY_TURNS:]:
-        if turn.action:
-            messages.append({"role": "user", "content": f"Ação do jogador: {turn.action}"})
+    for turn in game.turns:
+        if turn.number == 0:
+            prompt = OPENING_PROMPT
+        else:
+            prompt = _turn_prompt(game, turn.number, turn.action, Outcome(turn.outcome))
+        messages.append({"role": "user", "content": prompt})
         messages.append({"role": "assistant", "content": turn.narration})
     return messages
 
@@ -53,22 +60,26 @@ def _pacing(game: Game, number: int) -> str:
         return "\n\nA história está chegando ao fim: conduza para o clímax."
     return ""
 
-def _trim(text: str) -> str:
+def trim(text: str) -> str:
     """Corta frase pela metade quando o modelo bate no limite de tokens."""
+    text = text.strip()
     if text.endswith((".", "!", "?", "…", '"')):
         return text
     match = re.search(r"^.*[.!?…]", text, flags=re.S)
     return match.group(0) if match else text
 
-def _generate(messages: list[dict]) -> str:
+def opening_messages(game: Game) -> list[dict]:
+    return [_system_message(game), {"role": "user", "content": OPENING_PROMPT}]
+
+def _turn_prompt(game: Game, number: int, action: str, outcome: Outcome) -> str:
+    return f"Ação do jogador: {action}\n\n{OUTCOME_INSTRUCTIONS[outcome]}{_pacing(game, number)}\n\n{REMINDER}"
+
+def turn_messages(game: Game, number: int, action: str, outcome: Outcome) -> list[dict]:
+    prompt = _turn_prompt(game, number, action, outcome)
+    return [_system_message(game), *_history(game), {"role": "user", "content": prompt}]
+
+def stream(messages: list[dict]) -> Iterator[str]:
     try:
-        return _trim(ollama.chat(messages))
+        yield from ollama.chat_stream(messages)
     except httpx.HTTPError as exc:
         raise NarratorUnavailableError("O narrador não está disponível agora, tente novamente") from exc
-
-def narrate_opening(game: Game) -> str:
-    return _generate([_system_message(game), {"role": "user", "content": OPENING_PROMPT}])
-
-def narrate_turn(game: Game, number: int, action: str, outcome: Outcome) -> str:
-    prompt = f"Ação do jogador: {action}\n\n{OUTCOME_INSTRUCTIONS[outcome]}{_pacing(game, number)}\n\n{REMINDER}"
-    return _generate([_system_message(game), *_history(game), {"role": "user", "content": prompt}])

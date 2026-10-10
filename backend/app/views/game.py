@@ -21,8 +21,3 @@ class GameSummary(BaseModel):
 
 class GameOut(GameSummary):
     turns: list[TurnOut]
-
-class TurnResult(BaseModel):
-    game_status: str
-    turns_left: int
-    turn: TurnOut
