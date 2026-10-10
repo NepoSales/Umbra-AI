@@ -16,7 +16,7 @@ docker compose exec ollama ollama pull gemma3:1b
 cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn app.main:app --reload   # docs interativas em http://localhost:8000/docs
+.venv/bin/uvicorn app.main:app --reload   # jogo em http://localhost:8000, docs em /docs
 .venv/bin/pytest                          # testes
 ```
 
@@ -25,3 +25,7 @@ Variáveis de ambiente (opcionais em dev):
 - `UMBRA_DATABASE_URL`: padrão `sqlite:///./umbra.db`
 - `UMBRA_OLLAMA_URL`: padrão `http://localhost:11434`
 - `UMBRA_OLLAMA_MODEL`: padrão `gemma3:1b`
+
+## Frontend
+
+HTML, CSS e JavaScript puro em `frontend/`, sem build. O próprio backend serve os arquivos na raiz, então basta subir o uvicorn e abrir http://localhost:8000.

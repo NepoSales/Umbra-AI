@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Umbra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="fog" aria-hidden="true"></div>
+
+  <header class="top">
+    <h1 class="title">Umbra</h1>
+    <button id="logout" class="link" hidden>Sair</button>
+  </header>
+
+  <main>
+    <!-- Entrar / criar conta -->
+    <section id="auth" class="screen" hidden>
+      <p class="epigraph">Os mortos de Vel'Mora não descansam.<br>Alguém precisa descer até a cripta.</p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Entrar</button>
+        <button class="tab" data-tab="register">Criar conta</button>
+      </div>
+
+      <form id="login-form" class="panel">
+        <label>Nome ou email <input name="username" required autocomplete="username"></label>
+        <label>Senha <input name="password" type="password" required autocomplete="current-password"></label>
+        <button class="btn">Entrar</button>
+      </form>
+
+      <form id="register-form" class="panel" hidden>
+        <label>Nome do herói <input name="username" required minlength="3" maxlength="50" autocomplete="username"></label>
+        <label>Email <input name="email" type="email" required autocomplete="email"></label>
+        <label>Senha <input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></label>
+        <button class="btn">Criar conta</button>
+      </form>
+
+      <p id="auth-error" class="error" role="alert"></p>
+    </section>
+
+    <!-- Lista de aventuras -->
+    <section id="lobby" class="screen" hidden>
+      <button id="new-game" class="btn big">Nova aventura</button>
+      <h2>Suas aventuras</h2>
+      <ul id="games" class="games"></ul>
+      <p id="no-games" class="muted" hidden>Nenhuma aventura ainda. A vila espera.</p>
+      <p id="lobby-error" class="error" role="alert"></p>
+    </section>
+
+    <!-- Partida -->
+    <section id="game" class="screen" hidden>
+      <div class="game-bar">
+        <button id="back" class="link">← Aventuras</button>
+        <div id="candles" class="candles" title="Turnos restantes"></div>
+      </div>
+
+      <div id="story" class="story" aria-live="polite"></div>
+
+      <p id="game-error" class="error" role="alert"></p>
+
+      <div id="resume" class="resume" hidden>
+        <p class="muted">A narração foi interrompida. O destino já foi lançado.</p>
+        <button id="resume-btn" class="btn">Continuar</button>
+      </div>
+
+      <form id="action-form" class="action-form" hidden>
+        <textarea name="action" rows="2" maxlength="300" required placeholder="O que você faz?"></textarea>
+        <button class="btn">Agir</button>
+      </form>
+
+      <div id="ending" class="ending" hidden>
+        <p>Fim.</p>
+        <button id="ending-back" class="btn">Voltar às aventuras</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
