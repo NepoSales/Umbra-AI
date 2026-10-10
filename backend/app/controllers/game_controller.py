@@ -27,7 +27,8 @@ def _stream(pending: PendingTurn, status_code: int = status.HTTP_200_OK) -> Stre
     def events() -> Iterator[str]:
         yield _event("start", {
             "game_id": pending.game_id, "number": pending.number,
-            "roll": pending.roll, "outcome": pending.outcome,
+            # A ação vai junto porque, numa nova tentativa, vale a ação da rolagem salva
+            "action": pending.action, "roll": pending.roll, "outcome": pending.outcome,
         })
         try:
             for item in game_service.narrate(pending):

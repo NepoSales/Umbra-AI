@@ -44,6 +44,8 @@ def _history(game: Game) -> list[dict]:
     """
     messages = []
     for turn in game.turns:
+        if turn.narration is None:
+            continue
         if turn.number == 0:
             prompt = OPENING_PROMPT
         else:

@@ -10,7 +10,7 @@ class TurnOut(BaseModel):
     action: str | None
     roll: int | None
     outcome: str | None
-    narration: str
+    narration: str | None
 
 class GameSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)

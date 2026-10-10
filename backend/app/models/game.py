@@ -30,7 +30,7 @@ class Turn(Base):
     action: Mapped[str | None] = mapped_column(Text)
     roll: Mapped[int | None]
     outcome: Mapped[str | None] = mapped_column(String(20))
-    narration: Mapped[str] = mapped_column(Text)
+    narration: Mapped[str | None] = mapped_column(Text)  # None = dado já rolado, narração pendente
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     game: Mapped[Game] = relationship(back_populates="turns")
