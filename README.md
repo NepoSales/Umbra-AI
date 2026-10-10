@@ -1,16 +1,21 @@
 # Umbra-AI
 Uma IA que atua como mestre de RPG no estilo dark fantasy em campanhas individuais 
 
-## IA (Ollama)
-
-O narrador roda num modelo local via [Ollama](https://ollama.com). Pra subir em container:
+## Rodando tudo com Docker
 
 ```bash
-docker compose up -d
-docker compose exec ollama ollama pull gemma3:1b
+docker compose up -d --build
 ```
 
-## Backend
+Abra http://localhost:8501 pra jogar (a API fica em http://localhost:8000/docs). Na primeira vez o compose baixa o modelo `gemma3:1b` (~800 MB), então demora um pouco até o backend subir: dá pra acompanhar com `docker compose logs -f ollama-pull`.
+
+O banco e o modelo ficam em volumes do Docker, então sobrevivem a um `docker compose down` (só somem com `down -v`).
+
+## Rodando sem Docker (desenvolvimento)
+
+O narrador usa um modelo local via [Ollama](https://ollama.com). Instale o Ollama na máquina e baixe o modelo com `ollama pull gemma3:1b`.
+
+### Backend
 
 ```bash
 cd backend
@@ -26,7 +31,7 @@ Variáveis de ambiente (opcionais em dev):
 - `UMBRA_OLLAMA_URL`: padrão `http://localhost:11434`
 - `UMBRA_OLLAMA_MODEL`: padrão `gemma3:1b`
 
-## Frontend
+### Frontend
 
 Feito em [Streamlit](https://streamlit.io). Com o backend rodando:
 
