@@ -89,15 +89,39 @@ def test_narrator_offline_on_opening(client, auth, monkeypatch):
     # Jogo sem abertura não fica pra trás
     assert client.get("/games", headers=auth).json() == []
 
-def test_narrator_offline_on_turn_saves_nothing(client, auth, monkeypatch):
+def test_retry_keeps_roll_and_action(client, auth, monkeypatch, fake_ollama):
+    """Sem trapaça: cair no meio da narração não deixa rolar de novo nem trocar a ação."""
+    game_id = start_game(client, auth)
+    fake_stream = ollama.chat_stream
+    def offline(messages):
+        raise httpx.ReadTimeout("demorou")
+        yield
+    monkeypatch.setattr(ollama, "chat_stream", offline)
+    monkeypatch.setattr(dice.random, "randint", lambda a, b: 4)
+    assert parse_sse(act(client, auth, game_id, "Abro o caixão"))[-1][0] == "error"
+
+    # Tenta de novo com outra ação, torcendo por um dado melhor
+    monkeypatch.setattr(ollama, "chat_stream", fake_stream)
+    monkeypatch.setattr(dice.random, "randint", lambda a, b: 20)
+    events = parse_sse(act(client, auth, game_id, "Fujo da capela"))
+
+    start = events[0][1]
+    assert (start["number"], start["roll"], start["action"]) == (1, 4, "Abro o caixão")
+    assert "Abro o caixão" in fake_ollama[-1][-1]["content"]
+    # O turno pendente não entra no histórico como se já tivesse sido narrado
+    assert all(m["content"] is not None for m in fake_ollama[-1])
+    assert events[-1][0] == "done"
+    turns = client.get(f"/games/{game_id}", headers=auth).json()["turns"]
+    assert len(turns) == 2 and turns[1]["narration"] is not None
+
+def test_pending_turn_shows_without_narration(client, auth, monkeypatch, fake_ollama):
     game_id = start_game(client, auth)
     def offline(messages):
         raise httpx.ReadTimeout("demorou")
         yield
     monkeypatch.setattr(ollama, "chat_stream", offline)
-
-    assert parse_sse(act(client, auth, game_id))[-1][0] == "error"
-    assert len(client.get(f"/games/{game_id}", headers=auth).json()["turns"]) == 1
+    act(client, auth, game_id, "Abro o caixão")
+    assert client.get(f"/games/{game_id}", headers=auth).json()["turns"][1]["narration"] is None
 
 def test_each_prompt_extends_the_previous_one(client, auth, fake_ollama):
     """Garante o reaproveitamento do cache do Ollama: o pedido novo começa igual ao anterior."""
