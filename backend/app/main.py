@@ -1,8 +1,5 @@
-from pathlib import Path
-
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401  registra as tabelas no Base
 from app.controllers import auth_controller, game_controller, user_controller
@@ -35,8 +32,3 @@ def handle_service_error(request: Request, exc: ServiceError):
     code = ERROR_STATUS.get(type(exc), status.HTTP_500_INTERNAL_SERVER_ERROR)
     headers = {"WWW-Authenticate": "Bearer"} if code == status.HTTP_401_UNAUTHORIZED else None
     return JSONResponse(status_code=code, content={"detail": str(exc)}, headers=headers)
-
-# O front (HTML/CSS/JS puro) é servido na raiz. Fica por último pra não esconder as rotas da API.
-FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
-if FRONTEND_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

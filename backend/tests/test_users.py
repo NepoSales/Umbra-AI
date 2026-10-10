@@ -53,9 +53,3 @@ def test_update_conflict(client, auth):
 def test_delete(client, auth):
     assert client.delete("/users/me", headers=auth).status_code == 204
     assert client.get("/users/me", headers=auth).status_code == 401
-
-
-def test_serves_frontend_at_root(client):
-    res = client.get("/")
-    assert res.status_code == 200
-    assert "<title>Umbra</title>" in res.text
