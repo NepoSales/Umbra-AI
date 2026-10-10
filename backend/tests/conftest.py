@@ -5,7 +5,7 @@ os.environ["UMBRA_DATABASE_URL"] = "sqlite:///./test.db"
 import pytest
 from fastapi.testclient import TestClient
 
-from app.database import Base, engine
+from app.core.database import Base, engine
 from app.main import app
 
 
