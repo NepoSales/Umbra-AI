@@ -1,6 +1,6 @@
 services:
   ollama:
-    image: ollama/ollama:0.12.3
+    image: ollama/ollama:0.33.2
     # Sem porta publicada: o backend fala com ele pela rede interna do compose,
     # e assim não briga com um Ollama instalado direto na máquina (porta 11434).
     volumes:
@@ -19,7 +19,7 @@ services:
 
   # Baixa o modelo na primeira vez. Depois ele já está no volume e isso termina na hora.
   ollama-pull:
-    image: ollama/ollama:0.12.3
+    image: ollama/ollama:0.33.2
     entrypoint: ["ollama", "pull", "gemma3:1b"]
     environment:
       OLLAMA_HOST: http://ollama:11434
