@@ -1,0 +1,14 @@
+# Tema dark fantasy: quase preto, texto cor de pergaminho, vermelho-sangue nos destaques
+[theme]
+base = "dark"
+primaryColor = "#a3221b"
+backgroundColor = "#0a0807"
+secondaryBackgroundColor = "#16110e"
+textColor = "#d8c9b0"
+borderColor = "#3b2d24"
+font = "EB Garamond:https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap"
+headingFont = "Cinzel:https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap"
+baseFontSize = 18
+
+[client]
+toolbarMode = "minimal"
