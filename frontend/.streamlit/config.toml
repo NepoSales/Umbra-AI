@@ -1,14 +1,19 @@
-# Tema dark fantasy: quase preto, texto cor de pergaminho, vermelho-sangue nos destaques
+# Tema black e purple: preto com fundo levemente arroxeado, texto lavanda e roxo nos destaques
 [theme]
 base = "dark"
-primaryColor = "#a3221b"
-backgroundColor = "#0a0807"
-secondaryBackgroundColor = "#16110e"
-textColor = "#d8c9b0"
-borderColor = "#3b2d24"
+primaryColor = "#8b3fe0"
+backgroundColor = "#0a0810"
+secondaryBackgroundColor = "#16111f"
+textColor = "#e2d9f3"
+linkColor = "#b78cf5"
+borderColor = "#2e2442"
 font = "EB Garamond:https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap"
 headingFont = "Cinzel:https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap"
 baseFontSize = 18
+
+[theme.sidebar]
+backgroundColor = "#0f0b17"
+secondaryBackgroundColor = "#1a1426"
 
 [client]
 toolbarMode = "minimal"
