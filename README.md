@@ -170,3 +170,7 @@ As rotas que narram respondem em [Server-Sent Events](https://developer.mozilla.
 - **O modelo é pequeno.** O `gemma3:1b` às vezes escreve frases estranhas ou passa do tamanho pedido. Modelos maiores escrevem melhor, mas ficam lentos demais em CPU.
 - **Uma narração por vez.** Em CPU, gerar várias narrações em paralelo só divide o processador, então os pedidos fazem fila. Funciona bem para uso pessoal ou poucos jogadores.
 - **Sem migrações de banco.** Mudanças nas tabelas exigem apagar o `umbra.db` (ou o volume do Docker).
+
+## Licença
+
+Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE).
