@@ -6,3 +6,9 @@ class ConflictError(ServiceError):
 
 class AuthenticationError(ServiceError):
     pass
+
+class NotFoundError(ServiceError):
+    pass
+
+class NarratorUnavailableError(ServiceError):
+    pass

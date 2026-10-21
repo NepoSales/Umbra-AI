@@ -1,0 +1,16 @@
+services:
+  ollama:
+    image: ollama/ollama:0.12.3
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      # Em CPU, rodar várias narrações ao mesmo tempo só divide os núcleos entre elas.
+      # Com 1, os pedidos fazem fila e cada um sai na velocidade máxima.
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "30m"
+
+volumes:
+  ollama:
