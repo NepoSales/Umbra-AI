@@ -20,7 +20,7 @@ def chat_stream(messages: list[dict]) -> Iterator[str]:
         "keep_alive": "30m",  # mantém o modelo carregado entre turnos
         "options": {
             "num_ctx": 4096,  # cabe a aventura inteira (~3000 tokens em 12 turnos)
-            "num_predict": 180,  # teto de segurança, caso o modelo ignore o limite de frases
+            "num_predict": 140,  # teto de segurança, caso o modelo ignore o limite de frases
             "temperature": 0.8,
         },
     }

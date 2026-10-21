@@ -14,21 +14,32 @@ SYSTEM_PROMPT = """Você é o Mestre de um RPG de dark fantasy para um único jo
 
 Ambientação: {name} chega a Vel'Mora, uma vila isolada nas Terras Cinzentas onde os mortos deixaram de descansar há sete noites. O sino da capela toca sozinho à meia-noite, e no alto da colina a cripta da família Aldren está aberta. A missão de {name}: descobrir o que despertou os mortos e dar fim a isso.
 
+Segredo da história (o jogador não sabe; revele uma pista por vez):
+- O padre Elias toca o sino à meia-noite para chamar os mortos. Ele quer trazer de volta a filha, Lívia, enterrada na cripta.
+- Pistas: na cripta, o caixão de Lívia está vazio e há velas recém-acesas; no altar da cripta, o diário do padre fala em "trazê-la de volta"; na capela, o sino tem ossos gravados com sangue.
+- Para acabar com isso: destruir o sino ou deter o padre Elias.
+
 Regras:
 - Português do Brasil, segunda pessoa ("você").
-- Tom sombrio e opressivo.
-- Textos CURTOS: no máximo 5 frases.
+- Tom sombrio, mas claro: diga exatamente o que acontece.
+- No máximo 3 frases curtas.
+- A cada turno acontece algo novo: uma pista, um inimigo ou um lugar novo. Nunca repita a cena anterior.
+- Termine sempre mostrando algo concreto na cena: um objeto, uma passagem, uma pessoa ou uma criatura.
+- Nunca sugira o que o jogador deve fazer.
 - Nunca mencione dados, números ou regras.
 - Nunca decida o que o jogador faz ou fala."""
 
 OUTCOME_INSTRUCTIONS = {
-    Outcome.FAIL: "Narre como essa ação DÁ ERRADO: o jogador falha e sofre uma consequência ruim (ferimento, perda ou um perigo maior). Não descreva nenhum sucesso.",
-    Outcome.SUCCESS: "Narre como essa ação DÁ CERTO, por pouco, com muita tensão. O jogador vence: se for um combate, o inimigo cai.",
-    Outcome.EPIC: "Narre como essa ação DÁ CERTO de forma ÉPICA e grandiosa. O jogador vence sem sofrer dano: se for um combate, o inimigo é destruído.",
+    Outcome.FAIL: "Essa ação DÁ ERRADO. Mostre uma consequência concreta: você se fere, perde algo (a tocha, a arma) ou um inimigo aparece. Não descreva nenhum sucesso.",
+    Outcome.SUCCESS: "Essa ação DÁ CERTO, por pouco. O jogador consegue o que queria e, se fizer sentido, encontra a próxima pista. Se for um combate, o inimigo cai.",
+    Outcome.EPIC: "Essa ação DÁ CERTO de forma ÉPICA. O jogador consegue o que queria sem se ferir e encontra a próxima pista. Se for um combate, o inimigo é destruído.",
 }
 
+# Usada quando o jogador só pergunta: não tem dado, então nada dá certo nem errado
+QUESTION_INSTRUCTION = "O jogador fez uma PERGUNTA. Responda dentro da história, com o que o personagem consegue ver ou lembrar agora. Nada de bom ou de ruim acontece, e não entregue o segredo."
+
 # Repetido no fim de todo pedido: modelo pequeno presta mais atenção no final do prompt
-REMINDER = "Responda em no máximo 5 frases."
+REMINDER = "Responda em no máximo 3 frases e termine mostrando algo concreto na cena."
 
 OPENING_PROMPT = f"Comece a aventura: narre a chegada à vila e apresente a primeira cena. {REMINDER}"
 
@@ -49,7 +60,8 @@ def _history(game: Game) -> list[dict]:
         if turn.number == 0:
             prompt = OPENING_PROMPT
         else:
-            prompt = _turn_prompt(game, turn.number, turn.action, Outcome(turn.outcome))
+            outcome = Outcome(turn.outcome) if turn.outcome else None
+            prompt = _turn_prompt(game, turn.number, turn.action, outcome)
         messages.append({"role": "user", "content": prompt})
         messages.append({"role": "assistant", "content": turn.narration})
     return messages
@@ -73,10 +85,11 @@ def trim(text: str) -> str:
 def opening_messages(game: Game) -> list[dict]:
     return [_system_message(game), {"role": "user", "content": OPENING_PROMPT}]
 
-def _turn_prompt(game: Game, number: int, action: str, outcome: Outcome) -> str:
-    return f"Ação do jogador: {action}\n\n{OUTCOME_INSTRUCTIONS[outcome]}{_pacing(game, number)}\n\n{REMINDER}"
+def _turn_prompt(game: Game, number: int, action: str, outcome: Outcome | None) -> str:
+    instruction = OUTCOME_INSTRUCTIONS[outcome] if outcome else QUESTION_INSTRUCTION
+    return f"Ação do jogador: {action}\n\n{instruction}{_pacing(game, number)}\n\n{REMINDER}"
 
-def turn_messages(game: Game, number: int, action: str, outcome: Outcome) -> list[dict]:
+def turn_messages(game: Game, number: int, action: str, outcome: Outcome | None) -> list[dict]:
     prompt = _turn_prompt(game, number, action, outcome)
     return [_system_message(game), *_history(game), {"role": "user", "content": prompt}]
 

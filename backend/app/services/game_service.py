@@ -69,8 +69,10 @@ def prepare_turn(db: Session, user: User, game_id: int, action: str) -> PendingT
         raise ConflictError("A abertura dessa aventura não foi narrada, comece um jogo novo")
 
     if turn is None:
-        roll = roll_d20()
-        turn = Turn(number=len(game.turns), action=action, roll=roll, outcome=outcome_for(roll))
+        # Pergunta ao Mestre não é uma tentativa: não rola dado, ninguém ganha nem perde
+        roll = None if action.strip().endswith("?") else roll_d20()
+        outcome = outcome_for(roll) if roll else None
+        turn = Turn(number=len(game.turns), action=action, roll=roll, outcome=outcome)
         game.turns.append(turn)
         try:
             db.commit()
@@ -78,10 +80,11 @@ def prepare_turn(db: Session, user: User, game_id: int, action: str) -> PendingT
             db.rollback()
             raise ConflictError("Outra ação desse jogo foi processada ao mesmo tempo, tente de novo")
 
+    outcome = Outcome(turn.outcome) if turn.outcome else None
     return PendingTurn(
         game_id=game.id, turn_id=turn.id, number=turn.number, max_turns=game.max_turns,
-        action=turn.action, roll=turn.roll, outcome=Outcome(turn.outcome),
-        messages=narrator.turn_messages(game, turn.number, turn.action, Outcome(turn.outcome)),
+        action=turn.action, roll=turn.roll, outcome=outcome,
+        messages=narrator.turn_messages(game, turn.number, turn.action, outcome),
     )
 
 def narrate(pending: PendingTurn) -> Iterator[str | NarrationDone]:

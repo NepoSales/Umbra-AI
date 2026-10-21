@@ -1,9 +1,10 @@
 import json
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import iterate_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.controllers.dependencies import get_current_user
@@ -24,14 +25,16 @@ def _event(name: str, data: dict) -> str:
 
 def _stream(pending: PendingTurn, status_code: int = status.HTTP_200_OK) -> StreamingResponse:
     """Narração em SSE. Eventos: start → chunk (vários) → done, ou error se algo falhar no meio."""
-    def events() -> Iterator[str]:
+    async def events() -> AsyncIterator[str]:
         yield _event("start", {
             "game_id": pending.game_id, "number": pending.number,
             # A ação vai junto porque, numa nova tentativa, vale a ação da rolagem salva
             "action": pending.action, "roll": pending.roll, "outcome": pending.outcome,
         })
+        narration = game_service.narrate(pending)
         try:
-            for item in game_service.narrate(pending):
+            # Cada pedaço é lido numa thread, pra espera pela IA não travar a API
+            async for item in iterate_in_threadpool(narration):
                 if isinstance(item, str):
                     yield _event("chunk", {"text": item})
                 else:
@@ -39,6 +42,11 @@ def _stream(pending: PendingTurn, status_code: int = status.HTTP_200_OK) -> Stre
         except ServiceError as exc:
             # O status HTTP já foi enviado, então o erro vai como evento
             yield _event("error", {"detail": str(exc)})
+        finally:
+            # Se o jogador sai no meio, fecha a narração na hora: a IA para de gerar e a
+            # limpeza roda agora, não quando o coletor de lixo resolver (aí ela caía no
+            # meio do turno de outro jogador e os dois travavam o SQLite)
+            narration.close()
 
     return StreamingResponse(events(), status_code=status_code, media_type="text/event-stream")
 
