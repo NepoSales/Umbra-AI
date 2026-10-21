@@ -35,6 +35,9 @@ OUTCOME_INSTRUCTIONS = {
     Outcome.EPIC: "Essa ação DÁ CERTO de forma ÉPICA. O jogador consegue o que queria sem se ferir e encontra a próxima pista. Se for um combate, o inimigo é destruído.",
 }
 
+# Usada quando o jogador só pergunta: não tem dado, então nada dá certo nem errado
+QUESTION_INSTRUCTION = "O jogador fez uma PERGUNTA. Responda dentro da história, com o que o personagem consegue ver ou lembrar agora. Nada de bom ou de ruim acontece, e não entregue o segredo."
+
 # Repetido no fim de todo pedido: modelo pequeno presta mais atenção no final do prompt
 REMINDER = "Responda em no máximo 3 frases e termine mostrando algo concreto na cena."
 
@@ -57,7 +60,8 @@ def _history(game: Game) -> list[dict]:
         if turn.number == 0:
             prompt = OPENING_PROMPT
         else:
-            prompt = _turn_prompt(game, turn.number, turn.action, Outcome(turn.outcome))
+            outcome = Outcome(turn.outcome) if turn.outcome else None
+            prompt = _turn_prompt(game, turn.number, turn.action, outcome)
         messages.append({"role": "user", "content": prompt})
         messages.append({"role": "assistant", "content": turn.narration})
     return messages
@@ -81,10 +85,11 @@ def trim(text: str) -> str:
 def opening_messages(game: Game) -> list[dict]:
     return [_system_message(game), {"role": "user", "content": OPENING_PROMPT}]
 
-def _turn_prompt(game: Game, number: int, action: str, outcome: Outcome) -> str:
-    return f"Ação do jogador: {action}\n\n{OUTCOME_INSTRUCTIONS[outcome]}{_pacing(game, number)}\n\n{REMINDER}"
+def _turn_prompt(game: Game, number: int, action: str, outcome: Outcome | None) -> str:
+    instruction = OUTCOME_INSTRUCTIONS[outcome] if outcome else QUESTION_INSTRUCTION
+    return f"Ação do jogador: {action}\n\n{instruction}{_pacing(game, number)}\n\n{REMINDER}"
 
-def turn_messages(game: Game, number: int, action: str, outcome: Outcome) -> list[dict]:
+def turn_messages(game: Game, number: int, action: str, outcome: Outcome | None) -> list[dict]:
     prompt = _turn_prompt(game, number, action, outcome)
     return [_system_message(game), *_history(game), {"role": "user", "content": prompt}]
 

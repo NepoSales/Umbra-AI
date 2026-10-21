@@ -61,6 +61,19 @@ def test_play_turn(client, auth, monkeypatch, fake_ollama):
     # A IA recebe a ação e a instrução do resultado
     assert "ÉPICA" in fake_ollama[-1][-1]["content"]
 
+def test_question_does_not_roll(client, auth, fake_ollama):
+    game_id = start_game(client, auth)
+
+    events = parse_sse(act(client, auth, game_id, "O que tem na cripta? "))
+    start, done = events[0][1], events[-1][1]
+    assert start["roll"] is None and start["outcome"] is None
+    assert done["turns_left"] == 11  # perguntar também gasta o turno
+    assert "PERGUNTA" in fake_ollama[-1][-1]["content"]
+
+    # O histórico do turno seguinte recria o pedido da pergunta sem quebrar
+    act(client, auth, game_id)
+    assert "PERGUNTA" in fake_ollama[-1][3]["content"]
+
 def test_game_ends_after_max_turns(client, auth, fake_ollama):
     game_id = start_game(client, auth)
     for _ in range(12):

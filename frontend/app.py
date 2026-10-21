@@ -73,7 +73,8 @@ def show_turn(action: str | None, roll: int | None, outcome: str | None) -> None
     if action:
         with st.chat_message("user", avatar=PLAYER):
             st.markdown(f"*{action}*")
-            st.caption(f"d20: **{roll}** · {ROLL_LABEL[outcome]}")
+            if roll:  # pergunta ao Mestre não rola dado
+                st.caption(f"d20: **{roll}** · {ROLL_LABEL[outcome]}")
 
 
 def play(path: str, body: dict | None = None, resuming: bool = False) -> None:
